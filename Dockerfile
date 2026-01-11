@@ -12,6 +12,7 @@ RUN comfy node install --exit-on-fail RES4LYF
 RUN comfy node install --exit-on-fail crt-nodes
 RUN comfy node install --exit-on-fail ControlAltAI-Nodes
 RUN comfy node install --exit-on-fail was-node-suite-comfyui
+RUN comfy node install --exit-on-fail ComfyUI_Comfyroll_CustomNodes
 
 # 2. Создаем конфиг, который заставит ComfyUI искать модели на сетевом томе
 # Мы предполагаем, что вы примонтируете Network Volume в папку /models

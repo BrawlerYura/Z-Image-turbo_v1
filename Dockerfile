@@ -1,6 +1,8 @@
 # Используем базовый образ runpod для серверлесс
 FROM runpod/worker-comfyui:5.5.1-base
 
+RUN cd /workspace/runpod-slim/ComfyUI && git pull && pip install -r requirements.txt
+
 # 1. Устанавливаем кастомные ноды (они занимают мало места, оставляем в образе)
 RUN comfy node install --exit-on-fail comfyui-impact-subpack --mode remote
 RUN comfy node install --exit-on-fail comfyui-impact-pack

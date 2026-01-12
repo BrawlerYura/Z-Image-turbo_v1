@@ -1,7 +1,16 @@
 # Используем базовый образ runpod для серверлесс
 FROM runpod/worker-comfyui:5.5.1-base
 
-RUN cd /workspace/runpod-slim/ComfyUI && git pull && pip install -r requirements.txt
+USER root
+
+# 1. Устанавливаем git (он нужен для git pull и установки нод)
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
+# 2. ОБНОВЛЯЕМ ComfyUI (в этом образе он лежит в /comfyui)
+RUN cd /comfyui && \
+    git fetch --all && \
+    git reset --hard origin/master && \
+    pip install --no-cache-dir --upgrade -r requirements.txt
 
 # 1. Устанавливаем кастомные ноды (они занимают мало места, оставляем в образе)
 RUN comfy node install --exit-on-fail comfyui-impact-subpack --mode remote
@@ -14,6 +23,7 @@ RUN comfy node install --exit-on-fail crt-nodes
 RUN comfy node install --exit-on-fail ControlAltAI-Nodes
 RUN comfy node install --exit-on-fail was-node-suite-comfyui
 RUN comfy node install --exit-on-fail ComfyUI_Comfyroll_CustomNodes
+RUN comfy node install --exit-on-fail ComfyUI-GGUF
 
 # 2. Создаем конфиг, который заставит ComfyUI искать модели на сетевом томе
 RUN echo "runpod_volume:" > /extra_model_paths.yaml && \

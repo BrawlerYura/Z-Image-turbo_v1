@@ -1,44 +1,44 @@
-# Используем базовый образ runpod для серверлесс
+# Используем базовый образ runpod
 FROM runpod/worker-comfyui:5.5.1-base
 
 USER root
 
-# 1. Устанавливаем git (он нужен для git pull и установки нод)
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
-
-# 2. ОБНОВЛЯЕМ ComfyUI (в этом образе он лежит в /comfyui)
-RUN cd /comfyui && \
+# 1. Устанавливаем системные зависимости и обновляем ComfyUI в ОДНОМ слое
+RUN apt-get update && apt-get install -y git && \
+    cd /comfyui && \
     git fetch --all && \
     git reset --hard origin/master && \
-    pip install --no-cache-dir --upgrade -r requirements.txt
+    pip install --no-cache-dir --upgrade -r requirements.txt && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 1. Устанавливаем кастомные ноды (они занимают мало места, оставляем в образе)
-RUN comfy node install --exit-on-fail comfyui-impact-subpack --mode remote
-RUN comfy node install --exit-on-fail comfyui-impact-pack
-RUN comfy node install --exit-on-fail rgthree-comfy
-RUN comfy node install --exit-on-fail comfy-image-saver
-RUN comfy node install --exit-on-fail comfyui-kjnodes
-RUN comfy node install --exit-on-fail RES4LYF
-RUN comfy node install --exit-on-fail crt-nodes
-RUN comfy node install --exit-on-fail ControlAltAI-Nodes
-RUN comfy node install --exit-on-fail was-node-suite-comfyui
-RUN comfy node install --exit-on-fail ComfyUI_Comfyroll_CustomNodes
-RUN comfy node install --exit-on-fail ComfyUI-GGUF
+# 2. Устанавливаем ВСЕ кастомные ноды ОДНОЙ командой
+# Это значительно уменьшает размер образа и нагрузку на сборщик
+RUN comfy node install --exit-on-fail \
+    comfyui-impact-subpack \
+    comfyui-impact-pack \
+    rgthree-comfy \
+    comfy-image-saver \
+    comfyui-kjnodes \
+    RES4LYF \
+    crt-nodes \
+    ControlAltAI-Nodes \
+    was-node-suite-comfyui \
+    ComfyUI_Comfyroll_CustomNodes \
+    ComfyUI-GGUF
 
-# 2. Создаем конфиг, который заставит ComfyUI искать модели на сетевом томе
-RUN echo "runpod_volume:" > /extra_model_paths.yaml && \
-    echo "    base_path: /runpod-volume" >> /extra_model_paths.yaml && \
-    echo "    checkpoints: checkpoints" >> /extra_model_paths.yaml && \
-    echo "    unet_gguf: unet_gguf" >> /extra_model_paths.yaml && \
-    echo "    unet: unet_gguf" >> /extra_model_paths.yaml && \
-    echo "    text_encoders: text_encoders" >> /extra_model_paths.yaml && \
-    echo "    vae: vae" >> /extra_model_paths.yaml && \
-    echo "    loras: loras" >> /extra_model_paths.yaml && \
-    echo "    ultralytics: ultralytics" >> /extra_model_paths.yaml && \
-    echo "    sams: sams" >> /extra_model_paths.yaml && \
-    echo "    diffusion_models: diffusion_models" >> /extra_model_paths.yaml && \
-    echo "    upscale_models: upscale_models" >> /extra_model_paths.yaml
+# 3. Создаем конфиг путей
+RUN echo "runpod_volume:" > /comfyui/extra_model_paths.yaml && \
+    echo "    base_path: /runpod-volume" >> /comfyui/extra_model_paths.yaml && \
+    echo "    checkpoints: checkpoints" >> /comfyui/extra_model_paths.yaml && \
+    echo "    unet: unet_gguf" >> /comfyui/extra_model_paths.yaml && \
+    echo "    unet_gguf: unet_gguf" >> /comfyui/extra_model_paths.yaml && \
+    echo "    clip: text_encoders" >> /comfyui/extra_model_paths.yaml && \
+    echo "    vae: vae" >> /comfyui/extra_model_paths.yaml && \
+    echo "    loras: loras" >> /comfyui/extra_model_paths.yaml && \
+    echo "    ultralytics: ultralytics" >> /comfyui/extra_model_paths.yaml && \
+    echo "    sams: sams" >> /comfyui/extra_model_paths.yaml && \
+    echo "    diffusion_models: unet_gguf" >> /comfyui/extra_model_paths.yaml && \
+    echo "    upscale_models: upscale_models" >> /comfyui/extra_model_paths.yaml
 
-# Копируем конфиг во все возможные места установки ComfyUI для подстраховки
-RUN cp /extra_model_paths.yaml /comfyui/extra_model_paths.yaml || true
-RUN mkdir -p /workspace/runpod-slim/ComfyUI && cp /extra_model_paths.yaml /workspace/runpod-slim/ComfyUI/extra_model_paths.yaml || true
+# Дублируем конфиг для подстраховки
+RUN cp /comfyui/extra_model_paths.yaml /extra_model_paths.yaml

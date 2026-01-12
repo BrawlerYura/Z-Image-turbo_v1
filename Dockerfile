@@ -12,19 +12,18 @@ RUN apt-get update && apt-get install -y git && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 2. Устанавливаем ВСЕ кастомные ноды ОДНОЙ командой
-# Это значительно уменьшает размер образа и нагрузку на сборщик
-RUN comfy node install --exit-on-fail \
-    comfyui-impact-subpack \
-    comfyui-impact-pack \
-    rgthree-comfy \
-    comfy-image-saver \
-    comfyui-kjnodes \
-    RES4LYF \
-    crt-nodes \
-    ControlAltAI-Nodes \
-    was-node-suite-comfyui \
-    ComfyUI_Comfyroll_CustomNodes \
-    ComfyUI-GGUF
+RUN echo "runpod_volume:" > /comfyui/extra_model_paths.yaml && \
+    echo "    base_path: /runpod-volume" >> /comfyui/extra_model_paths.yaml && \
+    echo "    checkpoints: checkpoints" >> /comfyui/extra_model_paths.yaml && \
+    echo "    unet: unet_gguf" >> /comfyui/extra_model_paths.yaml && \
+    echo "    unet_gguf: unet_gguf" >> /comfyui/extra_model_paths.yaml && \
+    echo "    clip: text_encoders" >> /comfyui/extra_model_paths.yaml && \
+    echo "    vae: vae" >> /comfyui/extra_model_paths.yaml && \
+    echo "    loras: loras" >> /comfyui/extra_model_paths.yaml && \
+    echo "    ultralytics: ultralytics" >> /comfyui/extra_model_paths.yaml && \
+    echo "    sams: sams" >> /comfyui/extra_model_paths.yaml && \
+    echo "    diffusion_models: unet_gguf" >> /comfyui/extra_model_paths.yaml && \
+    echo "    upscale_models: upscale_models" >> /comfyui/extra_model_paths.yaml
 
 # 2. Устанавливаем основные ноды через CLI
 RUN comfy node install --exit-on-fail \

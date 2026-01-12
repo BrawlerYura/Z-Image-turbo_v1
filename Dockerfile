@@ -26,26 +26,27 @@ RUN comfy node install --exit-on-fail \
     ComfyUI_Comfyroll_CustomNodes \
     ComfyUI-GGUF
 
-# 3. Создаем конфиг путей
-RUN echo "runpod_volume:" > /comfyui/extra_model_paths.yaml && \
-    echo "    base_path: /runpod-volume" >> /comfyui/extra_model_paths.yaml && \
-    echo "    checkpoints: checkpoints" >> /comfyui/extra_model_paths.yaml && \
-    echo "    unet: unet_gguf" >> /comfyui/extra_model_paths.yaml && \
-    echo "    unet_gguf: unet_gguf" >> /comfyui/extra_model_paths.yaml && \
-    echo "    clip: text_encoders" >> /comfyui/extra_model_paths.yaml && \
-    echo "    vae: vae" >> /comfyui/extra_model_paths.yaml && \
-    echo "    loras: loras" >> /comfyui/extra_model_paths.yaml && \
-    echo "    ultralytics: ultralytics" >> /comfyui/extra_model_paths.yaml && \
-    echo "    sams: sams" >> /comfyui/extra_model_paths.yaml && \
-    echo "    diffusion_models: unet_gguf" >> /comfyui/extra_model_paths.yaml && \
-    echo "    upscale_models: upscale_models" >> /comfyui/extra_model_paths.yaml
+# 2. Устанавливаем основные ноды через CLI
+RUN comfy node install --exit-on-fail \
+    comfyui-impact-subpack \
+    comfyui-impact-pack \
+    rgthree-comfy \
+    comfy-image-saver \
+    comfyui-kjnodes \
+    RES4LYF \
+    crt-nodes \
+    ControlAltAI-Nodes \
+    was-node-suite-comfyui \
+    ComfyUI-GGUF
 
-# 3. Устанавливаем Comfyroll вручную через Git, чтобы точно попасть в имя
-RUN cd /comfyui/custom_nodes && \
+# 3. Переустанавливаем Comfyroll начисто через Git
+# Сначала удаляем папку (чтобы не было ошибки 'already exists'), потом клонируем
+RUN rm -rf /comfyui/custom_nodes/ComfyUI_Comfyroll_CustomNodes && \
+    cd /comfyui/custom_nodes && \
     git clone https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes.git
 
-# 4. ФИКС ЗАВИСИМОСТЕЙ (Критически важно для работы CR Upscale Image)
-# Устанавливаем headless-версию OpenCV и Pillow
+# 4. УСТАНАВЛИВАЕМ КРИТИЧЕСКИЕ ЗАВИСИМОСТИ
+# Без этого Comfyroll НЕ ЗАГРУЗИТСЯ в Docker, даже если папка на месте
 RUN pip install --no-cache-dir opencv-python-headless Pillow
 
 # Дублируем конфиг для подстраховки

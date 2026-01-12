@@ -40,5 +40,13 @@ RUN echo "runpod_volume:" > /comfyui/extra_model_paths.yaml && \
     echo "    diffusion_models: unet_gguf" >> /comfyui/extra_model_paths.yaml && \
     echo "    upscale_models: upscale_models" >> /comfyui/extra_model_paths.yaml
 
+# 3. Устанавливаем Comfyroll вручную через Git, чтобы точно попасть в имя
+RUN cd /comfyui/custom_nodes && \
+    git clone https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes.git
+
+# 4. ФИКС ЗАВИСИМОСТЕЙ (Критически важно для работы CR Upscale Image)
+# Устанавливаем headless-версию OpenCV и Pillow
+RUN pip install --no-cache-dir opencv-python-headless Pillow
+
 # Дублируем конфиг для подстраховки
 RUN cp /comfyui/extra_model_paths.yaml /extra_model_paths.yaml
